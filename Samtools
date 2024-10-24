@@ -1,0 +1,39 @@
+# Use the official Alpine image as the base
+FROM alpine:latest
+
+# Metadata
+LABEL maintainer="Lucien Piat <lucien.piat@inrae.fr>"
+LABEL description="A lightweight Docker image for building samtools from a local archive using Alpine Linux."
+
+# Install build dependencies, including ncurses for tview support
+RUN apk add --no-cache \
+    bash \
+    curl \
+    build-base \
+    zlib-dev \
+    bzip2-dev \
+    xz-dev \
+    tar \
+    ncurses-dev  # Added ncurses development package
+
+# Set working directory
+WORKDIR /data
+
+# Copy local tar.bz2 archive into the Docker image
+COPY samtools-1.21.tar.bz2 /data/
+
+# Extract, build, and install samtools
+RUN tar -xjf samtools-1.21.tar.bz2 && \
+    cd samtools-1.21 && \
+    ./configure --prefix=/usr/local && \
+    make && \
+    make install && \
+    cd .. && \
+    rm -rf samtools-1.21 samtools-1.21.tar.bz2
+
+# Set the PATH environment variable
+ENV PATH="/usr/local/bin:${PATH}"
+
+# Set entry point to bash
+ENTRYPOINT ["/bin/bash"]
+
